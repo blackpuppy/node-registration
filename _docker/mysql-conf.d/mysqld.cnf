@@ -1,0 +1,8 @@
+[mysqld]
+character_set_server=utf8mb4
+collation_server=utf8mb4_unicode_ci
+default-time-zone='+08:00'
+;sql-mode="ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION"
+
+;set native password plugin for MySQL 8
+;default_authentication_plugin=mysql_native_password
