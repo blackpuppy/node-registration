@@ -7,5 +7,5 @@ COPY package.json .
 #
 # COPY . .
 
-RUN cd /usr/src/app \
-	&& yarn
+RUN yarn \
+    && yarn add knex -g
