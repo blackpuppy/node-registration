@@ -1,20 +1,38 @@
 version: '3.1'
 services:
-    web:
+    app:
         build:
             context: ./
-            dockerfile: _docker/web-dev.docker
-        command: npm run dev
+            dockerfile: _docker/app-dev.docker
         volumes:
-            - .:/usr/app/
-            - /usr/app/node_modules
-        ports:
-            - "3000:3000"
+            - ./:/usr/src/app
+        working_dir: /usr/src/app
         depends_on:
             - db
         environment:
+            NODE_ENV: development
             DB_PORT: 3306
             DB_HOST: db
+        ports:
+            - 8094:8094
+        command: npm run dev
+
+    # app:
+    #     build:
+    #         context: ./
+    #         dockerfile: _docker/app-dev.docker
+    #     command: npm run dev
+    #     volumes:
+    #         - .:/usr/src/app
+    #         - /usr/src/appnode_modules
+    #     ports:
+    #         - "3000:3000"
+    #     depends_on:
+    #         - db
+    #     environment:
+    #         DB_PORT: 3306
+    #         DB_HOST: db
+
     db:
         image: mysql
         command: --default-authentication-plugin=mysql_native_password
