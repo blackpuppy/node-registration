@@ -1,0 +1,12 @@
+{
+  "name": "registration",
+  "version": "1.0.0",
+  "description": "teacher-student registration management",
+  "repository": "https://github.com/blackpuppy/node-registration",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Zhu Ming",
+  "license": "ISC"
+}
