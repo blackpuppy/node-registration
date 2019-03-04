@@ -3,9 +3,5 @@ FROM node:8-alpine
 WORKDIR /usr/src/app
 
 COPY package.json .
-# RUN yarn
-#
-# COPY . .
-
-RUN yarn \
+RUN yarn --silent \
     && yarn global add knex
