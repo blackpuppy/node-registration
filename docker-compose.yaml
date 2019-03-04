@@ -15,23 +15,7 @@ services:
             DB_HOST: db
         ports:
             - 8094:8094
-        command: npm run dev
-
-    # app:
-    #     build:
-    #         context: ./
-    #         dockerfile: _docker/app-dev.docker
-    #     command: npm run dev
-    #     volumes:
-    #         - .:/usr/src/app
-    #         - /usr/src/appnode_modules
-    #     ports:
-    #         - "3000:3000"
-    #     depends_on:
-    #         - db
-    #     environment:
-    #         DB_PORT: 3306
-    #         DB_HOST: db
+        command: yarn dev
 
     db:
         image: mysql
