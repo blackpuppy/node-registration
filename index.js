@@ -7,12 +7,12 @@ app.use(express.static('public'));
 app.use(bodyParser.json());
 
 app.post('/api/register', (req, res) => {
-  store
-    .createUser({
+  store.register({
       teacher: req.body.teacher,
       students: req.body.students
     })
     .then(() => res.sendStatus(200))
+    .catch(() => res.sendStatus(500));
 });
 
 app.listen(8094, () => {
