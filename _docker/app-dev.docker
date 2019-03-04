@@ -8,4 +8,4 @@ COPY package.json .
 # COPY . .
 
 RUN yarn \
-    && yarn add knex -g
+    && yarn global add knex
