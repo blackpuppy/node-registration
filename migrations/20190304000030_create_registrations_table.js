@@ -1,5 +1,5 @@
 exports.up = function(knex, Promise) {
-  return knex.schema.createTable('registration', function (t) {
+  return knex.schema.createTable('registrations', function (t) {
     t.increments('id').primary();
     t.integer('teacher_id').unsigned().notNullable();
     t.integer('student_id').unsigned().notNullable();
@@ -14,5 +14,5 @@ exports.up = function(knex, Promise) {
 };
 
 exports.down = function(knex, Promise) {
-  return knex.schema.dropTableIfExists('registration');
+  return knex.schema.dropTableIfExists('registrations');
 };
