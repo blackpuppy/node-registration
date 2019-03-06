@@ -16,7 +16,6 @@ module.exports = {
     console.log(`register students ${studentEmails} to a teacher ${teacherEmail}`);
 
     return await knex.transaction(async function(tx) {
-      try {
         const [teacher, ...restTeachers] = await knex('teachers').transacting(tx).where({email: teacherEmail});
 
         let tid;
@@ -31,12 +30,12 @@ module.exports = {
           tid = teacher.id;
         }
 
-        console.debug('tid: ', tid);
+        console.debug('tid:', tid);
 
-        studentEmails.forEach(async function(studentEmail) {
+        await Promise.map(studentEmails, async function(studentEmail) {
           const [student, restStudents] = await knex('students').transacting(tx).where({email: studentEmail});
 
-          console.debug('student: ', student);
+          console.debug('student:', student);
 
           let sid;
           if (!student) {
@@ -50,14 +49,14 @@ module.exports = {
             sid = student.id;
           }
 
-          console.debug('sid: ', sid);
+          console.debug('sid:', sid);
 
           const [registration, ...restRegisrations] = await knex('registrations').transacting(tx).where({
             teacher_id: tid,
             student_id: sid,
           });
 
-          console.debug('registration: ', registration);
+          console.debug('registration:', registration);
 
           if (!registration) {
             console.debug('insert registration: (', tid, ', ', sid, ')');
@@ -67,7 +66,7 @@ module.exports = {
               student_id: sid,
               suspended: false,
             });
-          } else {
+          } else if (registration.suspended) {
             console.debug('update registration: (', tid, ', ', sid, ')');
 
             await knex('registrations').transacting(tx).where({
@@ -76,14 +75,6 @@ module.exports = {
             }).update({suspended: false});
           }
         });
-
-        tx.commit();
-      } catch (error) {
-        console.debug('exception: ', error);
-
-        tx.rollback();
-        throw error;
-      }
     });
   }
 }
