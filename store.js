@@ -1,37 +1,89 @@
 const knex = require('knex')(require('./knexfile'));
+const util = require('util');
+const Promise = require('bluebird');
+
+// function upsert(table, data, uniqueColumnName) {
+//   let insert = knex(table).insert(data);
+//   delete data['uniqueColumnName'];
+//   let update = knex(table).update(data);
+//   let query = util.format('%s on duplicate key update %s',
+//     insert.toString(), update.toString().replace(/^update ([`"])[^\1]+\1 set/i, ''))
+//   return knex.raw(query);
+// }
 
 module.exports = {
-  register ({teacher, students}) {
-    console.log(`register students ${students} to a teacher ${teacher}`);
+  async register ({teacherEmail, studentEmails}) {
+    console.log(`register students ${studentEmails} to a teacher ${teacherEmail}`);
 
-    const studentsData = students.map(s => ({
-      email: s
-    }));
+    return await knex.transaction(async function(tx) {
+      try {
+        const [teacher, ...restTeachers] = await knex('teachers').transacting(tx).where({email: teacherEmail});
 
-    console.debug('studentsData: ', studentsData);
+        let tid;
+        if (!teacher) {
+          console.debug('insert teacher');
 
-    return knex.transaction(function(tx) {
-      knex('teachers').transacting(tx).insert({email: teacher}, 'id')
-      .then(function(tids) {
-        console.debug('tids: ', tids);
+          let restTids;
+          [tid, ...restTids] = await knex('teachers').transacting(tx).insert({email: teacherEmail}, 'id');
+        } else {
+          console.debug('got teacher');
 
-        return knex('students').transacting(tx).insert(studentsData, ['id'])
-        .then(function(sids) {
-          console.debug('sids: ', sids);
+          tid = teacher.id;
+        }
 
-          const registrationsData = sids.map(sid => ({
-            teacher_id: tids[0],
-            student_id: sid
-          }));
+        console.debug('tid: ', tid);
 
-          console.debug('registrationsData: ', registrationsData);
+        studentEmails.forEach(async function(studentEmail) {
+          const [student, restStudents] = await knex('students').transacting(tx).where({email: studentEmail});
 
-          return knex('registrations').transacting(tx).insert(registrationsData);
-        })
-        .catch(tx.rollback);
-      })
-      .then(tx.commit)
-      .catch(tx.rollback);
+          console.debug('student: ', student);
+
+          let sid;
+          if (!student) {
+            console.debug('insert student');
+
+            let restSids;
+            [sid, ...restSids] = await knex('students').transacting(tx).insert({email: studentEmail}, 'id');
+          } else {
+            console.debug('got student');
+
+            sid = student.id;
+          }
+
+          console.debug('sid: ', sid);
+
+          const [registration, ...restRegisrations] = await knex('registrations').transacting(tx).where({
+            teacher_id: tid,
+            student_id: sid,
+          });
+
+          console.debug('registration: ', registration);
+
+          if (!registration) {
+            console.debug('insert registration: (', tid, ', ', sid, ')');
+
+            await knex('registrations').transacting(tx).insert({
+              teacher_id: tid,
+              student_id: sid,
+              suspended: false,
+            });
+          } else {
+            console.debug('update registration: (', tid, ', ', sid, ')');
+
+            await knex('registrations').transacting(tx).where({
+              teacher_id: registration.teacher_id,
+              student_id: registration.student_id,
+            }).update({suspended: false});
+          }
+        });
+
+        tx.commit();
+      } catch (error) {
+        console.debug('exception: ', error);
+
+        tx.rollback();
+        throw error;
+      }
     });
   }
 }
