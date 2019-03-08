@@ -33,12 +33,35 @@ module.exports = ({ router }) => {
       ctx.body = {students};
     })
     .catch((e) => {
-      // console.debug('error: ', e);
-
       const message = 'Internal server error';
       ctx.status = e.statusCode || 500;
       ctx.body = {
         error: e.data || { message }
+      };
+    });
+  });
+
+  // suspend a student
+  router.post('/suspend', async (ctx, next) => {
+    await console.log('ctx.request.body: ', ctx.request.body);
+
+    const studentEmail = ctx.request.body.student;
+
+    await store.suspend({
+      studentEmail: ctx.request.body.student
+    })
+    .then(() => {
+      ctx.status = 200;
+      message = `Student ${studentEmail} is suspended`;
+      ctx.body = {message};
+    })
+    .catch((e) => {
+      console.debug('error: ', e);
+
+      const message = e.message || 'Internal server error';
+      ctx.status = e.statusCode || 500;
+      ctx.body = {
+        error: { message }
       };
     });
   });

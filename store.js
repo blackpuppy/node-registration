@@ -16,65 +16,65 @@ module.exports = {
     console.log(`register students ${studentEmails} to a teacher ${teacherEmail}`);
 
     return await knex.transaction(async function(tx) {
-        const [teacher, ...restTeachers] = await knex('teachers').transacting(tx).where({email: teacherEmail});
+      const [teacher, ...restTeachers] = await knex('teachers').transacting(tx).where({email: teacherEmail});
 
-        let tid;
-        if (!teacher) {
-          // console.debug('insert teacher');
+      let tid;
+      if (!teacher) {
+        // console.debug('insert teacher');
 
-          let restTids;
-          [tid, ...restTids] = await knex('teachers').transacting(tx).insert({email: teacherEmail}, 'id');
+        let restTids;
+        [tid, ...restTids] = await knex('teachers').transacting(tx).insert({email: teacherEmail}, 'id');
+      } else {
+        // console.debug('got teacher');
+
+        tid = teacher.id;
+      }
+
+      // console.debug('tid:', tid);
+
+      await Promise.map(studentEmails, async function(studentEmail) {
+        const [student, restStudents] = await knex('students').transacting(tx).where({email: studentEmail});
+
+        // console.debug('student:', student);
+
+        let sid;
+        if (!student) {
+          // console.debug('insert student');
+
+          let restSids;
+          [sid, ...restSids] = await knex('students').transacting(tx).insert({email: studentEmail}, 'id');
         } else {
-          // console.debug('got teacher');
+          // console.debug('got student');
 
-          tid = teacher.id;
+          sid = student.id;
         }
 
-        // console.debug('tid:', tid);
+        // console.debug('sid:', sid);
 
-        await Promise.map(studentEmails, async function(studentEmail) {
-          const [student, restStudents] = await knex('students').transacting(tx).where({email: studentEmail});
+        const [registration, ...restRegisrations] = await knex('registrations').transacting(tx).where({
+          teacher_id: tid,
+          student_id: sid,
+        });
 
-          // console.debug('student:', student);
+        // console.debug('registration:', registration);
 
-          let sid;
-          if (!student) {
-            // console.debug('insert student');
+        if (!registration) {
+          // console.debug('insert registration: (', tid, ', ', sid, ')');
 
-            let restSids;
-            [sid, ...restSids] = await knex('students').transacting(tx).insert({email: studentEmail}, 'id');
-          } else {
-            // console.debug('got student');
-
-            sid = student.id;
-          }
-
-          // console.debug('sid:', sid);
-
-          const [registration, ...restRegisrations] = await knex('registrations').transacting(tx).where({
+          await knex('registrations').transacting(tx).insert({
             teacher_id: tid,
             student_id: sid,
+            suspended: false,
           });
+        } else if (registration.suspended) {
+          // console.debug('update registration: (', tid, ', ', sid, ')');
 
-          // console.debug('registration:', registration);
-
-          if (!registration) {
-            // console.debug('insert registration: (', tid, ', ', sid, ')');
-
-            await knex('registrations').transacting(tx).insert({
-              teacher_id: tid,
-              student_id: sid,
-              suspended: false,
-            });
-          } else if (registration.suspended) {
-            // console.debug('update registration: (', tid, ', ', sid, ')');
-
-            await knex('registrations').transacting(tx).where({
-              teacher_id: registration.teacher_id,
-              student_id: registration.student_id,
-            }).update({suspended: false});
-          }
-        });
+          await knex('registrations').transacting(tx).where({
+            teacher_id: registration.teacher_id,
+            student_id: registration.student_id,
+          }).update({suspended: false});
+        }
+      });
     });
   },
 
@@ -90,5 +90,23 @@ module.exports = {
     // console.debug('students found: ', studentEmails);
 
     return studentEmails;
+  },
+
+  async suspend({studentEmail}) {
+    await console.log(`suspend student ${studentEmail}`);
+
+    const [student, restStudents] = await knex('students').where({email: studentEmail});
+
+    await console.debug('student:', student);
+
+    if (!student) {
+      return Promise.reject({
+        statusCode: 404,
+        message: "Student Not Found"
+      });
+    }
+
+    return await knex('registrations').update({suspended: true})
+      .where('student_id', student.id);
   }
 }

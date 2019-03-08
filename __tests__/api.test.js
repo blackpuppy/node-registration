@@ -37,13 +37,22 @@ describe('common students test', () => {
   });
 });
 
-describe('suspend test', () => {
-  test('post suspend POST /api/suspend', async () => {
+describe('suspend a student', () => {
+  test('if the student exists, it succeeds', async () => {
     const response = await request(server).post('/api/suspend').send({
-      "student" : "studentmary@gmail.com"
+      "student" : "studentjon@example.com"
     });
     expect(response.status).toEqual(200);
     expect(response.body).toBeDefined();
-    expect(response.text).toContain('OK');
+    expect(response.body.message).toContain('is suspended');
+  });
+
+  test('if the student does not exist, it fails', async () => {
+    const response = await request(server).post('/api/suspend').send({
+      "student" : "student-not-found@gmail.com"
+    });
+    expect(response.status).toEqual(404);
+    expect(response.body).toBeDefined();
+    expect(response.text).toContain('Student Not Found');
   });
 });
