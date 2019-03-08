@@ -1,10 +1,11 @@
 const Koa = require('koa');
 const Router = require('koa-router');
+const bodyParser = require('koa-body');
 const logger = require('koa-logger');
-const store = require('./store');
 
 const app = new Koa();
 
+app.use(bodyParser());
 
 // log all events to the terminal
 app.use(logger());

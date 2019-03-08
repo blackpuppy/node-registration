@@ -1,21 +1,34 @@
+const store = require('../store');
+
 module.exports = ({ router }) => {
   // getting the home route
   router.get('/', (ctx, next) => {
     ctx.body = 'Hello World!';
   });
 
-// router.post('/api/register', (req, res) => {
-//   store.register({
-//       teacherEmail: req.body.teacher,
-//       studentEmails: req.body.students
-//     })
-//     .then(() => res.sendStatus(200))
-//     .catch(() => res.sendStatus(500));
-// });
+  router.post('/register', async (ctx, next) => {
+    await console.log('ctx.request.body: ', ctx.request.body);
+
+    await store.register({
+        teacherEmail: ctx.request.body.teacher,
+        studentEmails: ctx.request.body.students
+      })
+      .then(() => {
+        ctx.status = 200;
+        ctx.body = 'OK';
+      })
+      .catch((e) => {
+        const message = 'Internal server error';
+        ctx.status = e.statusCode || 500;
+        ctx.body = {
+          error: e.data || { message }
+        };
+      });
+  });
 
   // getting the common students route
   router.get('/commonstudents', (ctx, next) => {
-    console.log('ctx: ', ctx);
+    console.log('ctx.query.teacher: ', ctx.query.teacher);
 
     ctx.body = {"students": [
       "commonstudent1@gmail.com",
