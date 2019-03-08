@@ -1,20 +1,38 @@
-const express = require('express');
-const bodyParser = require('body-parser');
+const Koa = require('koa');
+const Router = require('koa-router');
+const logger = require('koa-logger');
 const store = require('./store');
 
-const app = express();
-app.use(express.static('public'));
-app.use(bodyParser.json());
+const app = new Koa();
 
-app.post('/api/register', (req, res) => {
-  store.register({
-      teacherEmail: req.body.teacher,
-      studentEmails: req.body.students
-    })
-    .then(() => res.sendStatus(200))
-    .catch(() => res.sendStatus(500));
+
+// log all events to the terminal
+app.use(logger());
+
+// error handling
+app.use(async (ctx, next) => {
+  try {
+    await next();
+  } catch (err) {
+    ctx.status = err.status || 500;
+    ctx.body = err.message;
+    ctx.app.emit('error', err, ctx);
+  }
 });
 
-app.listen(8094, () => {
-  console.log('Server running on http://localhost:8094')
+// instantiate our new Router
+const router = new Router({
+  prefix: '/api'
 });
+// require our external routes and pass in the router
+require('./routes/api')({ router });
+
+app.use(router.routes());
+app.use(router.allowedMethods());
+
+const PORT = process.env.PORT || 8094;
+
+const server = app.listen(PORT, () =>
+  console.log(`Server running on port: ${PORT}`)
+);
+module.exports = server;

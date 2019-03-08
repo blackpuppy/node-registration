@@ -12,7 +12,7 @@ const Promise = require('bluebird');
 // }
 
 module.exports = {
-  async register ({teacherEmail, studentEmails}) {
+  async register({teacherEmail, studentEmails}) {
     console.log(`register students ${studentEmails} to a teacher ${teacherEmail}`);
 
     return await knex.transaction(async function(tx) {
@@ -76,5 +76,13 @@ module.exports = {
           }
         });
     });
+  },
+
+  async commonStudents({teacherEmail, studentEmails}) {
+    return {"students": [
+      "commonstudent1@gmail.com",
+      "commonstudent2@gmail.com",
+      "student_only_under_teacher_ken@gmail.com"
+    ]};
   }
 }
