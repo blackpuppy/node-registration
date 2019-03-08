@@ -21,6 +21,8 @@ Local development
 Run unit tests
 --------------
 
+Run unit tests:
+
 ```
 $ docker exec -ti registration_app_1 yarn test
 ```
