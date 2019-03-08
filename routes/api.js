@@ -1,11 +1,6 @@
 const store = require('../store');
 
 module.exports = ({ router }) => {
-  // getting the home route
-  router.get('/', (ctx, next) => {
-    ctx.body = 'Hello World!';
-  });
-
   router.post('/register', async (ctx, next) => {
     await console.log('ctx.request.body: ', ctx.request.body);
 

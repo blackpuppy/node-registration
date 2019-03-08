@@ -12,14 +12,6 @@ afterAll(() => {
   console.log('server closed!');
 });
 
-describe('basic route test', () => {
-  test('get home route GET /', async () => {
-  const response = await request(server).get('/api');
-  expect(response.status).toEqual(200);
-  expect(response.text).toContain('Hello World!');
-  });
-});
-
 describe('registration test', () => {
   test('post registration  POST /api/register', async () => {
     const response = await request(server).post('/api/register').send({
@@ -40,6 +32,7 @@ describe('common students test', () => {
   test('get common students  GET /api/commonstudents', async () => {
     const response = await request(server).get('/api/commonstudents?teacher=teacherken@example.com&teacher=teacherjoe@example.com');
     expect(response.status).toEqual(200);
-    expect(response.text).toContain('students');
+    expect(response.body.students).toBeDefined();
+    expect(response.body.students.length >= 0).toBeTruthy();
   });
 });
