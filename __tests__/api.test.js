@@ -13,7 +13,7 @@ afterAll(() => {
 });
 
 describe('registration test', () => {
-  test('post registration  POST /api/register', async () => {
+  test('post registration POST /api/register', async () => {
     const response = await request(server).post('/api/register').send({
       "teacher": "teacherken@gmail.com",
       "students":
@@ -29,10 +29,21 @@ describe('registration test', () => {
 });
 
 describe('common students test', () => {
-  test('get common students  GET /api/commonstudents', async () => {
+  test('get common students GET /api/commonstudents', async () => {
     const response = await request(server).get('/api/commonstudents?teacher=teacherken@example.com&teacher=teacherjoe@example.com');
     expect(response.status).toEqual(200);
     expect(response.body.students).toBeDefined();
     expect(response.body.students.length >= 0).toBeTruthy();
+  });
+});
+
+describe('suspend test', () => {
+  test('post suspend POST /api/suspend', async () => {
+    const response = await request(server).post('/api/suspend').send({
+      "student" : "studentmary@gmail.com"
+    });
+    expect(response.status).toEqual(200);
+    expect(response.body).toBeDefined();
+    expect(response.text).toContain('OK');
   });
 });
