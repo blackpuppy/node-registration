@@ -4,4 +4,4 @@ WORKDIR /usr/src/app
 
 COPY package.json .
 RUN yarn --silent \
-    && yarn global add knex
+    && yarn global add knex nodemon
