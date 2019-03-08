@@ -20,46 +20,46 @@ module.exports = {
 
         let tid;
         if (!teacher) {
-          console.debug('insert teacher');
+          // console.debug('insert teacher');
 
           let restTids;
           [tid, ...restTids] = await knex('teachers').transacting(tx).insert({email: teacherEmail}, 'id');
         } else {
-          console.debug('got teacher');
+          // console.debug('got teacher');
 
           tid = teacher.id;
         }
 
-        console.debug('tid:', tid);
+        // console.debug('tid:', tid);
 
         await Promise.map(studentEmails, async function(studentEmail) {
           const [student, restStudents] = await knex('students').transacting(tx).where({email: studentEmail});
 
-          console.debug('student:', student);
+          // console.debug('student:', student);
 
           let sid;
           if (!student) {
-            console.debug('insert student');
+            // console.debug('insert student');
 
             let restSids;
             [sid, ...restSids] = await knex('students').transacting(tx).insert({email: studentEmail}, 'id');
           } else {
-            console.debug('got student');
+            // console.debug('got student');
 
             sid = student.id;
           }
 
-          console.debug('sid:', sid);
+          // console.debug('sid:', sid);
 
           const [registration, ...restRegisrations] = await knex('registrations').transacting(tx).where({
             teacher_id: tid,
             student_id: sid,
           });
 
-          console.debug('registration:', registration);
+          // console.debug('registration:', registration);
 
           if (!registration) {
-            console.debug('insert registration: (', tid, ', ', sid, ')');
+            // console.debug('insert registration: (', tid, ', ', sid, ')');
 
             await knex('registrations').transacting(tx).insert({
               teacher_id: tid,
@@ -67,7 +67,7 @@ module.exports = {
               suspended: false,
             });
           } else if (registration.suspended) {
-            console.debug('update registration: (', tid, ', ', sid, ')');
+            // console.debug('update registration: (', tid, ', ', sid, ')');
 
             await knex('registrations').transacting(tx).where({
               teacher_id: registration.teacher_id,
@@ -78,11 +78,17 @@ module.exports = {
     });
   },
 
-  async commonStudents({teacherEmail, studentEmails}) {
-    return {"students": [
-      "commonstudent1@gmail.com",
-      "commonstudent2@gmail.com",
-      "student_only_under_teacher_ken@gmail.com"
-    ]};
+  async getCommonStudents({teacherEmails}) {
+    console.log(`retrieve students common to teacher(s) ${teacherEmails}`);
+
+    const studentEmails = await knex('students')
+      .select('students.email')
+      .join('registrations', 'registrations.student_id', '=', 'students.id')
+      .join('teachers', 'teachers.id', '=', 'registrations.teacher_id')
+      .whereIn('teachers.email', teacherEmails);
+
+    // console.debug('students found: ', studentEmails);
+
+    return studentEmails;
   }
 }
