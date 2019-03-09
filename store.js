@@ -79,7 +79,7 @@ module.exports = {
   },
 
   async getCommonStudents({teacherEmails}) {
-    console.log(`retrieve students common to teacher(s) ${teacherEmails}`);
+    await console.log(`retrieve students common to teacher(s) ${teacherEmails}`);
 
     const studentEmails = await knex('students')
       .select('students.email')
@@ -87,7 +87,7 @@ module.exports = {
       .join('teachers', 'teachers.id', '=', 'registrations.teacher_id')
       .whereIn('teachers.email', teacherEmails);
 
-    // console.debug('students found: ', studentEmails);
+    // await console.debug('common students found: ', studentEmails);
 
     return studentEmails;
   },
@@ -97,7 +97,7 @@ module.exports = {
 
     const [student, restStudents] = await knex('students').where({email: studentEmail});
 
-    await console.debug('student:', student);
+    // await console.debug('student:', student);
 
     if (!student) {
       return Promise.reject({
@@ -108,5 +108,69 @@ module.exports = {
 
     return await knex('registrations').update({suspended: true})
       .where('student_id', student.id);
+  },
+
+  async getNotificationRecipients({teacherEmail, notification}) {
+    await console.log(`get recipients of notification "${notification}" sent by teacher ${teacherEmail}`);
+
+    const [teacher, ...restTeachers] = await knex('teachers').where({email: teacherEmail});
+
+    let tid;
+    if (!teacher) {
+      // console.debug('insert teacher');
+
+      return Promise.reject({
+        statusCode: 404,
+        message: "Teacher Not Found",
+      });
+    } else {
+      // console.debug('got teacher');
+
+      tid = teacher.id;
+    }
+
+    // await console.debug('tid:', tid);
+
+    // get students listed in notification, validated to exists and not suspended
+    const emailRegex = /([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9._-]+)/gi;
+    const notificationEmails = notification.match(emailRegex);
+
+    // await console.debug('notificationEmails:', notificationEmails);
+
+    // validate students mentionedin notification
+    const studentEmailsFound = await knex('students')
+      .select('email')
+      .whereIn('email', notificationEmails)
+      .map(record => record.email);
+
+    // await console.debug('studentEmailsFound:', studentEmailsFound);
+
+    const studentEmailsNotFound = notificationEmails.filter(
+      email => !studentEmailsFound.includes(email)
+    );
+
+    // await console.debug('studentEmailsNotFound:', studentEmailsNotFound);
+
+    if (studentEmailsNotFound.length > 0) {
+      return Promise.reject({
+        statusCode: 404,
+        message: `Student Not Found: ${studentEmailsNotFound.join(', ')}`,
+      })
+    }
+
+    // get teacher's registered students and those mentioned in notification
+    const recipients = await knex('students')
+      .select('students.email')
+      .join('registrations', 'registrations.student_id', '=', 'students.id')
+      .where('registrations.suspended', 0)
+      .andWhere(function() {
+        this.where('registrations.teacher_id', tid)
+        .orWhereIn('students.email', notificationEmails)
+      })
+      .map(record => record.email);
+
+    // await console.debug('recipients:', recipients);
+
+    return recipients;
   }
 }

@@ -52,24 +52,24 @@ describe('suspension test', () => {
     });
     expect(response.status).toEqual(404);
     expect(response.body).toBeDefined();
-    expect(response.body.error.message).toContain('Student Not Found');
+    expect(response.body.message).toContain('Student Not Found');
   });
 });
 
 describe('retrieve students for notification', () => {
-  test('if the teacher/students exist, it succeeds', async () => {
+  test('if all the teacher and students exist, it succeeds', async () => {
     const response = await request(server).post('/api/retrievefornotifications').send({
-      "teacher":  "teacherken@example.com",
-      "notification": "Hello students! @studentagnes@example.com @studentmiche@example.com"
+      "teacher":  "teacherken@gmail.com",
+      "notification": "Hello students! @studentjon@example.com @studenthon@example.com"
     });
     expect(response.status).toEqual(200);
     expect(response.body).toBeDefined();
-    expect(response.body.message).toContain('is suspended');
+    expect(response.body.recipients.length >= 0).toBeTruthy();
   });
 
-  test('if the teacher/students do not exist, it fails', async () => {
+  test('if the teacher or any students do not exist, it fails', async () => {
     const response = await request(server).post('/api/retrievefornotifications').send({
-      "teacher":  "teacherken@example.com",
+      "teacher":  "teacherken@gmail.com",
       "notification": "Hello students! @studentagnes@example.com @student-not-found@example.com"
     });
     expect(response.status).toEqual(404);

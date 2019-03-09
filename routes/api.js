@@ -43,24 +43,43 @@ module.exports = ({ router }) => {
 
   // suspend a student
   router.post('/suspend', async (ctx, next) => {
-    await console.log('ctx.request.body: ', ctx.request.body);
+    // await console.log('ctx.request.body: ', ctx.request.body);
 
     const studentEmail = ctx.request.body.student;
 
     await store.suspend({
       studentEmail: ctx.request.body.student
     })
-    .then(() => {
+    .then(async () => {
       ctx.status = 204;
     })
-    .catch((e) => {
-      console.debug('error: ', e);
+    .catch(async (e) => {
+      // await console.debug('error: ', e);
 
       const message = e.message || 'Internal server error';
       ctx.status = e.statusCode || 500;
-      ctx.body = {
-        error: { message }
-      };
+      ctx.body = { message };
+    });
+  });
+
+  // retrieve students of a notification
+  router.post('/retrievefornotifications', async (ctx, next) => {
+    await console.log('/api/retrievefornotifications: ctx.request.body =', ctx.request.body);
+
+    await store.getNotificationRecipients({
+      teacherEmail: ctx.request.body.teacher,
+      notification: ctx.request.body.notification,
+    })
+    .then((recipients) => {
+      ctx.status = 200;
+      ctx.body = {recipients};
+    })
+    .catch((e) => {
+      // console.debug('error: ', e);
+
+      const message = e.message || 'Internal server error';
+      ctx.status = e.statusCode || 500;
+      ctx.body = { message };
     });
   });
 };
