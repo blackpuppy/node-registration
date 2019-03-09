@@ -81,15 +81,33 @@ module.exports = {
   async getCommonStudents({teacherEmails}) {
     await console.log(`retrieve students common to teacher(s) ${teacherEmails}`);
 
-    const studentEmails = await knex('students')
+    let commonStudentEmails = await knex('students')
       .select('students.email')
       .join('registrations', 'registrations.student_id', '=', 'students.id')
       .join('teachers', 'teachers.id', '=', 'registrations.teacher_id')
-      .whereIn('teachers.email', teacherEmails);
+      .where('teachers.email', teacherEmails[0])
+      .map(r => r.email);
 
-    // await console.debug('common students found: ', studentEmails);
+    if (teacherEmails.length > 1) {
+      await Promise.map(teacherEmails, async function(teacherEmail) {
+        const studentEmails = await knex('students')
+          .select('students.email')
+          .join('registrations', 'registrations.student_id', '=', 'students.id')
+          .join('teachers', 'teachers.id', '=', 'registrations.teacher_id')
+          .where('teachers.email', teacherEmail)
+          .map(r => r.email);
 
-    return studentEmails;
+        await console.debug(`students found for teacher ${teacherEmail}: `, commonStudentEmails);
+
+        commonStudentEmails = commonStudentEmails.filter(
+          email => studentEmails.includes(email)
+        );
+      });
+    }
+
+    await console.debug('common students found: ', commonStudentEmails);
+
+    return commonStudentEmails;
   },
 
   async suspend({studentEmail}) {

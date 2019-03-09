@@ -1,25 +1,14 @@
 const request = require('supertest');
 const server = require('../index.js');
 
-beforeAll(async () => {
-  // do something before anything else runs
-  console.log('Jest starting!');
-});
-
-// close the server after each test
-afterAll(() => {
-  server.close();
-  console.log('server closed!');
-});
-
 describe('registration test', () => {
-  test('post registration POST /api/register', async () => {
+  test('it succeeds', async () => {
     const response = await request(server).post('/api/register').send({
-      "teacher": "teacherken@gmail.com",
+      "teacher": "teacher-new@gmail.com",
       "students":
         [
-          "studentjon@example.com",
-          "studenthon@example.com"
+          "student-new-1@example.com",
+          "student-new-2@example.com"
         ]
     });
     expect(response.status).toEqual(200);
@@ -30,10 +19,17 @@ describe('registration test', () => {
 
 describe('common students test', () => {
   test('get common students GET /api/commonstudents', async () => {
-    const response = await request(server).get('/api/commonstudents?teacher=teacherken@example.com&teacher=teacherjoe@example.com');
+    const response = await request(server).get('/api/commonstudents?teacher=teacher-ken@example.com');
     expect(response.status).toEqual(200);
     expect(response.body.students).toBeDefined();
-    expect(response.body.students.length >= 0).toBeTruthy();
+    expect(response.body.students.length).toEqual(2);
+  });
+
+  test('get common students GET /api/commonstudents', async () => {
+    const response = await request(server).get('/api/commonstudents?teacher=teacher-ken@example.com&teacher=teacher-joe@example.com');
+    expect(response.status).toEqual(200);
+    expect(response.body.students).toBeDefined();
+    expect(response.body.students.length).toEqual(1);
   });
 });
 

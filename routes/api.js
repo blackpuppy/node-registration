@@ -13,11 +13,9 @@ module.exports = ({ router }) => {
       ctx.body = 'OK';
     })
     .catch((e) => {
-      const message = 'Internal server error';
+      const message = e.message || 'Internal server error';
       ctx.status = e.statusCode || 500;
-      ctx.body = {
-        error: e.data || { message }
-      };
+      ctx.body = { message };
     });
   });
 
@@ -25,19 +23,17 @@ module.exports = ({ router }) => {
   router.get('/commonstudents', async (ctx, next) => {
     await console.log('ctx.query.teacher: ', ctx.query.teacher);
 
-    await store.getCommonStudents({
-      teacherEmails: ctx.query.teacher
-    })
+    const teacherEmails = Array.isArray(ctx.query.teacher) ? ctx.query.teacher : [ctx.query.teacher];
+
+    await store.getCommonStudents({teacherEmails})
     .then((students) => {
       ctx.status = 200;
       ctx.body = {students};
     })
     .catch((e) => {
-      const message = 'Internal server error';
+      const message = e.message || 'Internal server error';
       ctx.status = e.statusCode || 500;
-      ctx.body = {
-        error: e.data || { message }
-      };
+      ctx.body = { message };
     });
   });
 
