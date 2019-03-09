@@ -51,9 +51,7 @@ module.exports = ({ router }) => {
       studentEmail: ctx.request.body.student
     })
     .then(() => {
-      ctx.status = 200;
-      message = `Student ${studentEmail} is suspended`;
-      ctx.body = {message};
+      ctx.status = 204;
     })
     .catch((e) => {
       console.debug('error: ', e);
