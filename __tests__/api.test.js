@@ -49,10 +49,32 @@ describe('suspend a student', () => {
 
   test('if the student does not exist, it fails', async () => {
     const response = await request(server).post('/api/suspend').send({
-      "student" : "student-not-found@gmail.com"
+      "student" : "student-not-found@example.com"
     });
     expect(response.status).toEqual(404);
     expect(response.body).toBeDefined();
     expect(response.text).toContain('Student Not Found');
+  });
+});
+
+describe('retrieve students for notification', () => {
+  test('if the teacher/students exist, it succeeds', async () => {
+    const response = await request(server).post('/api/retrievefornotifications').send({
+      "teacher":  "teacherken@example.com",
+      "notification": "Hello students! @studentagnes@example.com @studentmiche@example.com"
+    });
+    expect(response.status).toEqual(200);
+    expect(response.body).toBeDefined();
+    expect(response.body.message).toContain('is suspended');
+  });
+
+  test('if the teacher/students do not exist, it fails', async () => {
+    const response = await request(server).post('/api/retrievefornotifications').send({
+      "teacher":  "teacherken@example.com",
+      "notification": "Hello students! @studentagnes@example.com @student-not-found@example.com"
+    });
+    expect(response.status).toEqual(404);
+    expect(response.body).toBeDefined();
+    expect(response.body.message).toContain('Not Found');
   });
 });
