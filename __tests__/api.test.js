@@ -36,7 +36,7 @@ describe('common students test', () => {
 describe('suspension test', () => {
   test('if the student exists, it succeeds', async () => {
     const response = await request(server).post('/api/suspend').send({
-      "student" : "studentjon@example.com"
+      "student" : "student-jon@example.com"
     });
     expect(response.status).toEqual(204);
     expect(response.body).toEqual({});
@@ -55,21 +55,31 @@ describe('suspension test', () => {
 describe('retrieve students for notification', () => {
   test('if all the teacher and students exist, it succeeds', async () => {
     const response = await request(server).post('/api/retrievefornotifications').send({
-      "teacher":  "teacherken@gmail.com",
-      "notification": "Hello students! @studentjon@example.com @studenthon@example.com"
+      "teacher":  "teacher-ken@example.com",
+      "notification": "Hello students! @student-jon@example.com @student-hon@example.com"
     });
     expect(response.status).toEqual(200);
     expect(response.body).toBeDefined();
     expect(response.body.recipients.length >= 0).toBeTruthy();
   });
 
-  test('if the teacher or any students do not exist, it fails', async () => {
+  test('if all the teacher and students exist, it succeeds', async () => {
     const response = await request(server).post('/api/retrievefornotifications').send({
-      "teacher":  "teacherken@gmail.com",
-      "notification": "Hello students! @studentagnes@example.com @student-not-found@example.com"
+      "teacher":  "teacher-not-found@example.com",
+      "notification": "Hello students! @student-jon@example.com @student-hon@example.com"
     });
     expect(response.status).toEqual(404);
     expect(response.body).toBeDefined();
-    expect(response.body.message).toContain('Not Found');
+    expect(response.body.message).toContain('Teacher Not Found');
+  });
+
+  test('if the teacher or any students do not exist, it fails', async () => {
+    const response = await request(server).post('/api/retrievefornotifications').send({
+      "teacher":  "teacher-ken@example.com",
+      "notification": "Hello students! @student-hon@example.com @student-not-found@example.com"
+    });
+    expect(response.status).toEqual(404);
+    expect(response.body).toBeDefined();
+    expect(response.body.message).toContain('Student Not Found');
   });
 });
