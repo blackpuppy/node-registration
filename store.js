@@ -178,7 +178,8 @@ module.exports = {
 
     // get teacher's registered students and those mentioned in notification
     const recipients = await knex('students')
-      .select('students.email')
+      .distinct('students.email')
+      .select()
       .join('registrations', 'registrations.student_id', '=', 'students.id')
       .where('registrations.suspended', 0)
       .andWhere(function() {
